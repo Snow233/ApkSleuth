@@ -11,7 +11,7 @@ from apksleuth.core.manifest_analyzer import parse_manifest
 from apksleuth.core.native_analyzer import analyze_native_libraries
 from apksleuth.core.packer_detector import detect_packers
 from apksleuth.core.permission_analyzer import analyze_permissions
-from apksleuth.core.risk_engine import run_risk_engine, severity_counts
+from apksleuth.core.risk_engine import confidence_counts, run_risk_engine, severity_counts
 from apksleuth.core.resources import ResourceTableError, parse_resource_table
 from apksleuth.core.sdk_detector import detect_sdks
 from apksleuth.core.string_extractor import extract_strings
@@ -161,6 +161,7 @@ def _statistics(report: AnalysisReport) -> dict[str, object]:
 
     return {
         "findings_by_severity": severity_counts(report.findings),
+        "findings_by_confidence": confidence_counts(report.findings),
         "permissions": len(report.manifest.permissions),
         "components": component_counts,
         "exported_components": exported_components,

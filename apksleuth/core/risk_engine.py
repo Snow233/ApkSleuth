@@ -23,6 +23,8 @@ def run_risk_engine(report: AnalysisReport) -> list[Finding]:
                 description="The application enables android:debuggable.",
                 evidence='android:debuggable="true"',
                 recommendation="Disable debuggable in release builds.",
+                confidence="high",
+                review_hint="Confirm whether this APK is a release build. Debuggable should not be enabled for distributed builds.",
             )
         )
 
@@ -36,6 +38,8 @@ def run_risk_engine(report: AnalysisReport) -> list[Finding]:
                 description="The application allows adb backup.",
                 evidence='android:allowBackup="true"',
                 recommendation='Set android:allowBackup="false" unless backup is explicitly required and protected.',
+                confidence="high",
+                review_hint="Review whether sensitive local data can be backed up or restored on the target Android versions.",
             )
         )
 
@@ -49,6 +53,8 @@ def run_risk_engine(report: AnalysisReport) -> list[Finding]:
                 description="The application allows cleartext network traffic.",
                 evidence='android:usesCleartextTraffic="true"',
                 recommendation="Use HTTPS endpoints and restrict cleartext traffic with network security config.",
+                confidence="high",
+                review_hint="Check network security config and runtime endpoints to confirm whether cleartext traffic is reachable in production.",
             )
         )
 
@@ -68,6 +74,8 @@ def run_risk_engine(report: AnalysisReport) -> list[Finding]:
                     description=permission.description,
                     evidence=permission.name,
                     recommendation=permission.recommendation,
+                    confidence="high",
+                    review_hint="Confirm the permission is required for core functionality and protected by runtime permission flow or feature gating.",
                 )
             )
 
@@ -82,6 +90,8 @@ def run_risk_engine(report: AnalysisReport) -> list[Finding]:
                     description="A cleartext HTTP endpoint was found in APK contents.",
                     evidence=f"{item.value} ({item.source})",
                     recommendation="Use HTTPS endpoints and remove unused debug or staging URLs.",
+                    confidence="medium",
+                    review_hint="Confirm whether the URL is reachable in production code; static strings may include legacy or plugin endpoints.",
                 )
             )
         elif item.type in {"possible_secret", "jwt"}:
@@ -94,6 +104,8 @@ def run_risk_engine(report: AnalysisReport) -> list[Finding]:
                     description="A token, API key, JWT, or secret-like value was found in APK contents.",
                     evidence=f"{item.value} ({item.source})",
                     recommendation="Move secrets to a backend service or rotate exposed credentials if confirmed.",
+                    confidence="medium",
+                    review_hint="Validate whether the value is an active credential or token. Rotate it if exposure is confirmed.",
                 )
             )
 
@@ -108,6 +120,8 @@ def run_risk_engine(report: AnalysisReport) -> list[Finding]:
                     description="The APK appears to be signed with an Android debug certificate.",
                     evidence=cert.subject or "Android Debug certificate",
                     recommendation="Sign release builds with a protected release signing key.",
+                    confidence="high",
+                    review_hint="Confirm the APK is not a release artifact. Debug certificates should not be used for production distribution.",
                 )
             )
 
@@ -118,6 +132,13 @@ def severity_counts(findings: list[Finding]) -> dict[str, int]:
     counts = {"high": 0, "medium": 0, "low": 0, "info": 0}
     for finding in findings:
         counts[finding.severity] = counts.get(finding.severity, 0) + 1
+    return counts
+
+
+def confidence_counts(findings: list[Finding]) -> dict[str, int]:
+    counts = {"high": 0, "medium": 0, "low": 0}
+    for finding in findings:
+        counts[finding.confidence] = counts.get(finding.confidence, 0) + 1
     return counts
 
 
@@ -136,6 +157,8 @@ def _exported_component_finding(component: Component) -> Finding | None:
             description="The component is exported for Android media controls or media browsing.",
             evidence=f"{component.type} {component.name} exposes standard media control actions.",
             recommendation="Confirm the component only handles standard media intents and validates external input.",
+            confidence="medium",
+            review_hint="Review intent handling code and ensure only expected media actions are accepted.",
         )
 
     if component.permission:
@@ -147,6 +170,8 @@ def _exported_component_finding(component: Component) -> Finding | None:
             description=f"The exported {component.type} component is protected by a permission.",
             evidence=f"{component.type} {component.name} is exported with permission {component.permission}.",
             recommendation="Verify the protection level of the permission and keep the component exported only if external access is required.",
+            confidence="medium",
+            review_hint="Check the permission protectionLevel. Normal or dangerous permissions may not be enough for sensitive exported components.",
         )
 
     if component.type == "provider":
@@ -158,6 +183,8 @@ def _exported_component_finding(component: Component) -> Finding | None:
             description="An exported ContentProvider without permission protection may expose app data or operations.",
             evidence=f"provider {component.name} is exported without permission.",
             recommendation="Set android:exported=\"false\" or protect the provider with a signature-level permission.",
+            confidence="high",
+            review_hint="Review provider authorities, path permissions, grantUriPermissions, and query/insert/update/delete handlers.",
         )
 
     if _is_deep_link_activity(component):
@@ -169,6 +196,8 @@ def _exported_component_finding(component: Component) -> Finding | None:
             description="An exported deep link Activity may be reachable from browsers or other applications.",
             evidence=f"activity {component.name} exposes deep link intent filters without permission.",
             recommendation="Validate all deep link parameters, require authentication for sensitive flows, and restrict exported access where possible.",
+            confidence="high",
+            review_hint="Review scheme/host/path filters, authentication requirements, and parameter validation for all deep link entry points.",
         )
 
     if component.type == "service":
@@ -180,6 +209,8 @@ def _exported_component_finding(component: Component) -> Finding | None:
             description="An exported Service without permission protection can be invoked by other applications.",
             evidence=f"service {component.name} is exported without permission.",
             recommendation="Set android:exported=\"false\" or require a signature-level permission for the service.",
+            confidence="high",
+            review_hint="Review service entry points, accepted intents, binder exposure, and whether callers are authenticated.",
         )
 
     if component.type == "receiver":
@@ -191,6 +222,8 @@ def _exported_component_finding(component: Component) -> Finding | None:
             description="An exported BroadcastReceiver without permission protection may receive external broadcasts.",
             evidence=f"receiver {component.name} is exported without permission.",
             recommendation="Restrict the receiver, validate incoming intents, or require a permission for external broadcasts.",
+            confidence="high",
+            review_hint="Review accepted broadcast actions and ensure untrusted extras cannot trigger sensitive behavior.",
         )
 
     if component.exported is None and component.has_intent_filters:
@@ -202,6 +235,8 @@ def _exported_component_finding(component: Component) -> Finding | None:
             description="A component with intent filters and no explicit exported value may be externally reachable on older Android versions.",
             evidence=f"{component.type} {component.name} has intent filters and no explicit exported value.",
             recommendation="Set android:exported explicitly and keep it false unless external access is required.",
+            confidence="medium",
+            review_hint="Confirm target platform behavior and explicitly set android:exported for predictable exposure.",
         )
 
     return Finding(
@@ -212,6 +247,8 @@ def _exported_component_finding(component: Component) -> Finding | None:
         description="An exported Activity without permission protection may be started by other applications.",
         evidence=f"activity {component.name} is exported without permission.",
         recommendation="Set android:exported=\"false\" unless the Activity is intended as a public entry point, and validate all intent input.",
+        confidence="high",
+        review_hint="Review whether the Activity is a deliberate public entry point and validate all intent extras and data URIs.",
     )
 
 

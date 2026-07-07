@@ -252,6 +252,7 @@ def _render_analysis(config: WebConfig, job_id: str) -> str:
     data = json.loads(summary_path.read_text(encoding="utf-8"))
     apk = data.get("apk", {})
     risk = data.get("risk", {})
+    confidence = data.get("confidence", {})
     signals = data.get("key_signals", {})
     links = "".join(
         f"<a class=\"button-link\" href=\"/files/{escape(job_id)}/{filename}\">{label}</a>"
@@ -274,7 +275,9 @@ def _render_analysis(config: WebConfig, job_id: str) -> str:
           <div><span>高危</span><strong>{risk.get('high', 0)}</strong></div>
           <div><span>中危</span><strong>{risk.get('medium', 0)}</strong></div>
           <div><span>低危</span><strong>{risk.get('low', 0)}</strong></div>
-          <div><span>总风险</span><strong>{risk.get('total', 0)}</strong></div>
+          <div><span>总风险项</span><strong>{risk.get('total', 0)}</strong></div>
+          <div><span>高置信风险项</span><strong>{confidence.get('high', 0)}</strong></div>
+          <div><span>需复核风险项</span><strong>{confidence.get('medium', 0)}</strong></div>
           <div><span>导出组件</span><strong>{signals.get('exported_components', 0)}</strong></div>
           <div><span>HTTP URL</span><strong>{signals.get('http_urls', 0)}</strong></div>
           <div><span>疑似密钥</span><strong>{signals.get('possible_secrets', 0)}</strong></div>
@@ -291,7 +294,7 @@ def _render_analysis(config: WebConfig, job_id: str) -> str:
 def _render_analysis_findings(top_findings: object) -> str:
     rows = "".join(_analysis_finding_row(item) for item in _dict_items(top_findings))
     if not rows:
-        rows = '<tr class="empty-row"><td colspan="6">没有风险项。</td></tr>'
+        rows = '<tr class="empty-row"><td colspan="8">没有风险项。</td></tr>'
     return f"""
         <section>
           <h2>主要风险项</h2>
@@ -312,10 +315,10 @@ def _render_analysis_findings(top_findings: object) -> str:
           <p id="analysis-count" class="muted"></p>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>等级</th><th>规则</th><th>标题</th><th>数量</th><th>样例证据</th><th>建议</th></tr></thead>
+              <thead><tr><th>等级</th><th>可信度</th><th>规则</th><th>标题</th><th>数量</th><th>样例证据</th><th>建议</th><th>复核提示</th></tr></thead>
               <tbody id="analysis-findings-body">
                 {rows}
-                <tr id="analysis-empty-row" class="empty-row" hidden><td colspan="6">没有匹配的风险项。</td></tr>
+                <tr id="analysis-empty-row" class="empty-row" hidden><td colspan="8">没有匹配的风险项。</td></tr>
               </tbody>
             </table>
           </div>
@@ -326,20 +329,25 @@ def _render_analysis_findings(top_findings: object) -> str:
 def _analysis_finding_row(item: dict[str, Any]) -> str:
     severity = _string(item.get("severity"))
     label = _string(item.get("severity_label") or severity)
+    confidence = _string(item.get("confidence"))
+    confidence_label = _string(item.get("confidence_label") or confidence)
     finding_id = _string(item.get("id"))
     title = _string(item.get("title"))
     evidence = _string(item.get("sample_evidence"))
     recommendation = _string(item.get("recommendation"))
+    review_hint = _string(item.get("review_hint"))
     count = _string(item.get("count", 0))
-    search_text = " ".join((severity, label, finding_id, title, evidence, recommendation)).lower()
+    search_text = " ".join((severity, label, confidence, confidence_label, finding_id, title, evidence, recommendation, review_hint)).lower()
     return (
         f'<tr data-analysis-finding-row data-severity="{escape(severity, quote=True)}" data-search="{escape(search_text, quote=True)}">'
         f"<td><span class=\"badge {escape(severity, quote=True)}\">{escape(label)}</span></td>"
+        f"<td>{escape(confidence_label)}</td>"
         f"<td><code>{escape(finding_id)}</code></td>"
         f"<td>{escape(title)}</td>"
         f"<td>{escape(count)}</td>"
         f"<td>{escape(evidence)}</td>"
         f"<td>{escape(recommendation)}</td>"
+        f"<td>{escape(review_hint)}</td>"
         "</tr>"
     )
 

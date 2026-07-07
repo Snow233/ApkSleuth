@@ -163,6 +163,7 @@ class AnalyzerTests(unittest.TestCase):
         summary = render_report(report, "summary")
         self.assertIn("# ApkSleuth 简报", summary)
         self.assertIn("高危风险:", summary)
+        self.assertIn("高置信风险项:", summary)
 
         english_summary = render_report(report, "summary", language="en")
         self.assertIn("# ApkSleuth Brief Report", english_summary)
@@ -171,7 +172,11 @@ class AnalyzerTests(unittest.TestCase):
         summary_json = json.loads(render_report(report, "summary-json"))
         self.assertEqual(summary_json["language"], "zh")
         self.assertEqual(summary_json["apk"]["package_name"], "com.example.demo")
+        self.assertIn("confidence", summary_json)
+        self.assertGreater(summary_json["confidence"]["high"], 0)
         self.assertTrue(any(item["id"] == "exported-deep-link-activity" for item in summary_json["top_findings"]))
+        self.assertTrue(all("confidence" in item for item in summary_json["top_findings"]))
+        self.assertTrue(all("review_hint" in item for item in summary_json["top_findings"]))
 
         html = render_report(report, "html")
         self.assertIn("<!doctype html>", html)
@@ -180,6 +185,8 @@ class AnalyzerTests(unittest.TestCase):
         self.assertIn("id=\"finding-severity\"", html)
         self.assertIn("data-finding-row", html)
         self.assertIn("<details class=\"section\"", html)
+        self.assertIn("可信度", html)
+        self.assertIn("复核提示", html)
 
     def test_cli_logo_goes_to_stderr_without_polluting_report_stdout(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -348,6 +355,10 @@ class AnalyzerTests(unittest.TestCase):
         self.assertIn("疑似密钥样例", html)
         self.assertIn("高危权限", html)
         self.assertIn("优先修复建议", html)
+        self.assertIn("主要风险项", html)
+        self.assertIn("高置信风险项", html)
+        self.assertIn("可信度", html)
+        self.assertIn("复核提示", html)
         self.assertIn("api.example.com/login", html)
         self.assertIn("com.example.demo.MainActivity", html)
 

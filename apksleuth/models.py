@@ -154,6 +154,8 @@ class Finding:
     description: str
     evidence: str
     recommendation: str
+    confidence: str = "medium"
+    review_hint: str | None = None
 
 
 @dataclass
