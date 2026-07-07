@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Snow233/ApkSleuth/actions/workflows/ci.yml"><img src="https://github.com/Snow233/ApkSleuth/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge" alt="MIT License">
   <img src="https://img.shields.io/badge/local--first-no%20uploads-38bdf8?style=for-the-badge" alt="Local-first">
@@ -263,6 +264,12 @@ JSON 字段名保持英文，便于稳定解析。
 python -m unittest discover
 ```
 
+运行静态检查：
+
+```bash
+python -m ruff check .
+```
+
 运行语法编译检查：
 
 ```bash
@@ -272,6 +279,7 @@ python -m compileall apksleuth tests
 提交前推荐本地验证：
 
 ```bash
+python -m ruff check .
 python -m unittest discover
 python -m compileall apksleuth tests
 ```

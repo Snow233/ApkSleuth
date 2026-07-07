@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Snow233/ApkSleuth/actions/workflows/ci.yml"><img src="https://github.com/Snow233/ApkSleuth/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge" alt="MIT License">
   <img src="https://img.shields.io/badge/local--first-no%20uploads-38bdf8?style=for-the-badge" alt="Local-first">
@@ -263,6 +264,12 @@ Run the test suite:
 python -m unittest discover
 ```
 
+Run static checks:
+
+```bash
+python -m ruff check .
+```
+
 Run syntax compilation checks:
 
 ```bash
@@ -272,6 +279,7 @@ python -m compileall apksleuth tests
 Recommended local verification before committing:
 
 ```bash
+python -m ruff check .
 python -m unittest discover
 python -m compileall apksleuth tests
 ```
