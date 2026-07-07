@@ -357,6 +357,7 @@ def _render_analysis_details(data: dict[str, Any]) -> str:
         (
             _detail_section("高危权限", _simple_list(data.get("high_risk_permissions"), code=True), open_section=True),
             _detail_section("导出组件样例", _component_table(data.get("exported_component_samples")), open_section=True),
+            _detail_section("Deep Link 样例", _deep_link_table(data.get("deep_link_samples")), open_section=bool(data.get("deep_link_samples"))),
             _detail_section("HTTP URL 样例", _url_table(data.get("http_url_samples")), open_section=bool(data.get("http_url_samples"))),
             _detail_section("疑似密钥样例", _secret_table(data.get("possible_secret_samples"))),
             _detail_section("SDK 指纹", _fingerprint_table(data.get("sdks"), "type")),
@@ -407,6 +408,23 @@ def _url_table(items: object) -> str:
             "</tr>"
         )
     return _table(("URL", "来源", "等级"), rows, "未发现 HTTP URL 样例。")
+
+
+def _deep_link_table(items: object) -> str:
+    rows = []
+    for item in _dict_items(items):
+        path_value = _string(item.get("path") or item.get("pathPrefix") or item.get("pathPattern"))
+        rows.append(
+            "<tr>"
+            f"<td><code>{escape(_string(item.get('component')))}</code></td>"
+            f"<td>{escape(_string(item.get('scheme')))}</td>"
+            f"<td>{escape(_string(item.get('host')))}</td>"
+            f"<td>{escape(_string(item.get('port')))}</td>"
+            f"<td>{escape(path_value)}</td>"
+            f"<td>{escape(_string(item.get('mimeType')))}</td>"
+            "</tr>"
+        )
+    return _table(("组件", "Scheme", "Host", "Port", "Path", "MIME"), rows, "未发现 Deep Link 样例。")
 
 
 def _secret_table(items: object) -> str:
