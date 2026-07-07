@@ -33,11 +33,17 @@ SKIP_EXTENSIONS = {
     ".jpeg",
     ".gif",
     ".webp",
+    ".markdown",
+    ".md",
     ".mp3",
     ".mp4",
     ".ogg",
+    ".org",
     ".wav",
     ".arsc",
+    ".dtd",
+    ".java",
+    ".xsd",
     ".ttf",
     ".otf",
     ".woff",
@@ -58,6 +64,8 @@ SKIP_BASENAMES = {
     "notice.txt",
     "copying",
     "copying.txt",
+    "effective_tld_names.dat",
+    "public_suffix_list.dat",
     "readme",
     "readme.txt",
 }
@@ -71,25 +79,50 @@ URL_NOISE_PREFIXES = (
 )
 URL_NOISE_HOSTS = {
     "apache.org",
+    "almworks.com",
+    "commonmark.org",
+    "daringfireball.net",
+    "creativecommons.org",
     "en.wikipedia.org",
     "fsf.org",
+    "github.com",
     "gnu.org",
     "inkscape.org",
     "jmathtex.sourceforge.net",
+    "jcip.net",
+    "jeffreymartin.ca",
     "joda-time.sourceforge.net",
+    "localhost",
     "lua-users.org",
+    "mina.apache.org",
     "mozilla.org",
+    "ns.adobe.com",
+    "opensource.org",
+    "orgmode.org",
     "protobuf.dev",
     "semver.org",
     "sodipodi.sourceforge.net",
+    "stackoverflow.com",
+    "todotxt.org",
+    "tools.ietf.org",
+    "underscorejs.org",
     "wikipedia.org",
+    "www.allette.com.au",
     "www.apache.org",
+    "www.creativecommons.org",
     "www.fsf.org",
     "www.gnu.org",
     "www.inf.puc-rio.br",
     "www.inkscape.org",
+    "www.jcip.net",
     "www.lua-users.org",
     "www.mozilla.org",
+    "www.opensource.org",
+    "www.stackoverflow.com",
+    "www.todotxt.org",
+    "xml.org",
+    "xmlpull.org",
+    "engelschall.com",
 }
 
 
@@ -213,7 +246,14 @@ def _skip_data(filename: str, data: bytes) -> bool:
     lower = filename.lower()
     if lower.endswith(".xml") and data.lstrip() and not data.lstrip().startswith(b"<"):
         return True
+    if lower.endswith(".json") and _looks_like_dependency_notice_json(data):
+        return True
     return False
+
+
+def _looks_like_dependency_notice_json(data: bytes) -> bool:
+    sample = data[:8192]
+    return b'"libraries"' in sample and b'"uniqueId"' in sample and b'"licenses"' in sample
 
 
 def _emit_progress(

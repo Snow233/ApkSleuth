@@ -232,6 +232,21 @@ class AnalyzerTests(unittest.TestCase):
                 apk.writestr("assets/icon.svg", "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd")
                 apk.writestr("google/protobuf/timestamp.proto", "http://protobuf.dev/programming-guides/enum/#java")
                 apk.writestr("assets/docs/lua.txt", "http://lua-users.org/wiki/SandBoxes")
+                apk.writestr("org/publicsuffix/list/effective_tld_names.dat", "http://cenpac.net.nr/dns/index.html")
+                apk.writestr(
+                    "res/M7.json",
+                    '{"libraries":[{"uniqueId":"junit:junit","website":"http://junit.org","licenses":["EPL-1.0"]}]}',
+                )
+                apk.writestr("javax/annotation/concurrent/GuardedBy.java", "http://creativecommons.org/licenses/by/2.5 http://www.jcip.net")
+                apk.writestr("org/apache/ftpserver/config/spring/ftpserver-1.0.xsd", "http://mina.apache.org/ftpserver/spring/v1")
+                apk.writestr("assets/xml-docs.txt", "http://ns.adobe.com/xap/1.0/ http://xml.org/sax/features/external-general-entities http://xmlpull.org/v1/doc/features.html#indent-output")
+                apk.writestr("res/0Q.md", "http://tools.ietf.org/html/rfc4880#section-5.2.1")
+                apk.writestr("assets/templates/orgmode-reference.org", "http://google.com/][Google")
+                apk.writestr("assets/prism/prism.js", "http://localhost/components/prism-core.js:119:5 http://stackoverflow.com/a/2008444")
+                apk.writestr("assets/mermaid/mermaid.min.js", "http://engelschall.com http://commonmark.org/help/")
+                apk.writestr("assets/third-party.js", "http://opensource.org/licenses/MIT")
+                apk.writestr("assets/orgmode/org-bundle.js", "http://underscorejs.org/LICENSE http://daringfireball.net/2010/07/improved_regex_for_matching_urls http://orgmode.org/manual/Export-options.html")
+                apk.writestr("org/pageseeder/diffx/xml/namespaces.properties", "http://www.allette.com.au")
 
             with zipfile.ZipFile(apk_path) as apk:
                 findings = extract_strings(apk)
@@ -254,6 +269,25 @@ class AnalyzerTests(unittest.TestCase):
         self.assertNotIn("http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd", values)
         self.assertNotIn("http://protobuf.dev/programming-guides/enum/#java", values)
         self.assertNotIn("http://lua-users.org/wiki/SandBoxes", values)
+        self.assertNotIn("http://cenpac.net.nr/dns/index.html", values)
+        self.assertNotIn("http://junit.org", values)
+        self.assertNotIn("http://creativecommons.org/licenses/by/2.5", values)
+        self.assertNotIn("http://www.jcip.net", values)
+        self.assertNotIn("http://mina.apache.org/ftpserver/spring/v1", values)
+        self.assertNotIn("http://ns.adobe.com/xap/1.0/", values)
+        self.assertNotIn("http://xml.org/sax/features/external-general-entities", values)
+        self.assertNotIn("http://xmlpull.org/v1/doc/features.html#indent-output", values)
+        self.assertNotIn("http://tools.ietf.org/html/rfc4880#section-5.2.1", values)
+        self.assertNotIn("http://google.com/][Google", values)
+        self.assertNotIn("http://localhost/components/prism-core.js:119:5", values)
+        self.assertNotIn("http://stackoverflow.com/a/2008444", values)
+        self.assertNotIn("http://engelschall.com", values)
+        self.assertNotIn("http://opensource.org/licenses/MIT", values)
+        self.assertNotIn("http://commonmark.org/help/", values)
+        self.assertNotIn("http://underscorejs.org/LICENSE", values)
+        self.assertNotIn("http://daringfireball.net/2010/07/improved_regex_for_matching_urls", values)
+        self.assertNotIn("http://orgmode.org/manual/Export-options.html", values)
+        self.assertNotIn("http://www.allette.com.au", values)
 
     def test_media_components_are_low_risk_not_exported_service_noise(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
