@@ -1,5 +1,7 @@
 # ApkSleuth
 
+**Languages:** English | [简体中文](README.zh-CN.md)
+
 ApkSleuth is a local-first Android APK static analysis tool for security review, reverse-engineering learning, Android development checks, and app risk triage.
 
 It extracts APK metadata, Manifest configuration, permissions, exported components, URLs, IPs, emails, possible secrets, certificates, native libraries, SDK fingerprints, packer hints, and security findings. It can generate JSON, Markdown, HTML, short summary reports, structured summary JSON, batch indexes, and APK diff reports.
