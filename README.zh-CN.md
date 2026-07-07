@@ -2,11 +2,46 @@
 
 **语言:** [English](README.md) | 简体中文
 
+<p align="center">
+  <img src="docs/assets/apksleuth-hero.svg" alt="ApkSleuth 项目横幅" width="100%">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge" alt="MIT License">
+  <img src="https://img.shields.io/badge/local--first-no%20uploads-38bdf8?style=for-the-badge" alt="Local-first">
+  <img src="https://img.shields.io/badge/interface-CLI%20%2B%20Web%20UI-8b5cf6?style=for-the-badge" alt="CLI and Web UI">
+</p>
+
+<p align="center">
+  <strong>本地分析 APK，快速定位风险，并导出适合人工审计和自动化处理的报告。</strong>
+</p>
+
 ApkSleuth 是一个本地优先的 Android APK 静态分析工具，面向应用安全审计、逆向学习、Android 开发自检和应用风险排查。
 
 它可以提取 APK 基础信息、Manifest 配置、权限、导出组件、URL、IP、邮箱、疑似密钥、证书、Native 库、SDK 指纹、加固/混淆线索和安全风险项，并生成 JSON、Markdown、HTML、简报、结构化简报 JSON、批量扫描索引和 APK Diff 报告。
 
 APK 默认只在本地分析。ApkSleuth 不上传 APK，不依赖云端服务，也不需要账号。
+
+## 视觉预览
+
+<p align="center">
+  <img src="docs/assets/workflow.svg" alt="ApkSleuth 工作流" width="100%">
+</p>
+
+| CLI 工作流 | 本地 Web UI |
+| --- | --- |
+| <img src="docs/assets/cli-preview.svg" alt="ApkSleuth CLI 预览"> | <img src="docs/assets/web-ui-preview.svg" alt="ApkSleuth Web UI 预览"> |
+
+## 能力概览
+
+| 模块 | 说明 |
+| --- | --- |
+| 静态分析 | 解析 Manifest、资源、权限、字符串、证书、Native 库、SDK 指纹和加固线索。 |
+| 风险分流 | 按风险等级聚合发现项，并优先展示高危风险，减少低危噪声干扰。 |
+| 报告导出 | 支持 Markdown 简报、结构化 JSON、完整 JSON 和交互式 HTML 报告。 |
+| Web UI | 支持单个或多个 APK 上传、后台任务、历史搜索、风险排序和上传副本清理。 |
+| 自动化 | 提供 `summary-json`、批量 `index.json` 和 APK Diff JSON，便于接入下游流程。 |
 
 ## 功能亮点
 

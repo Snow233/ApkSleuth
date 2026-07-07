@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img" aria-label="ApkSleuth Web UI preview">
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="640" rx="30" fill="url(#page)"/>
+  <rect x="48" y="42" width="1104" height="556" rx="28" fill="#020617" opacity="0.58" stroke="#334155"/>
+  <text x="84" y="96" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="34" font-weight="800" fill="#f8fafc">ApkSleuth Local Console</text>
+  <text x="84" y="128" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" fill="#94a3b8">Upload APKs, monitor jobs, browse history, and inspect risk details.</text>
+  <rect x="84" y="164" width="320" height="142" rx="20" fill="url(#card)" stroke="#334155"/>
+  <text x="108" y="202" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#e5e7eb">Start analysis</text>
+  <rect x="108" y="224" width="248" height="34" rx="10" fill="#0f172a" stroke="#334155"/>
+  <text x="124" y="247" font-family="Consolas, monospace" font-size="14" fill="#94a3b8">choose multiple APK files</text>
+  <rect x="108" y="270" width="128" height="32" rx="16" fill="#38bdf8"/>
+  <text x="172" y="292" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#082f49">Analyze</text>
+  <rect x="428" y="164" width="688" height="142" rx="20" fill="url(#card)" stroke="#334155"/>
+  <text x="452" y="202" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#e5e7eb">Active jobs</text>
+  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15">
+    <text x="452" y="238" fill="#94a3b8">APK</text><text x="650" y="238" fill="#94a3b8">Status</text><text x="810" y="238" fill="#94a3b8">Step</text>
+    <text x="452" y="270" fill="#e5e7eb">chat.apk</text><text x="650" y="270" fill="#38bdf8">running</text><text x="810" y="270" fill="#cbd5e1">Extracting strings</text>
+    <text x="452" y="296" fill="#e5e7eb">player.apk</text><text x="650" y="296" fill="#22c55e">done</text><text x="810" y="296" fill="#cbd5e1">Report ready</text>
+  </g>
+  <rect x="84" y="336" width="1032" height="216" rx="20" fill="url(#card)" stroke="#334155"/>
+  <text x="108" y="374" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#e5e7eb">Report history</text>
+  <rect x="108" y="394" width="360" height="36" rx="12" fill="#0f172a" stroke="#334155"/>
+  <text x="128" y="418" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#94a3b8">Search app, package, SHA256, finding...</text>
+  <rect x="492" y="394" width="160" height="36" rx="12" fill="#0f172a" stroke="#334155"/>
+  <text x="514" y="418" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#94a3b8">Sort by risk</text>
+  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15">
+    <text x="108" y="462" fill="#94a3b8">App</text><text x="350" y="462" fill="#94a3b8">Package</text><text x="650" y="462" fill="#94a3b8">High</text><text x="740" y="462" fill="#94a3b8">Medium</text><text x="870" y="462" fill="#94a3b8">Action</text>
+    <line x1="108" y1="476" x2="1088" y2="476" stroke="#334155"/>
+    <text x="108" y="504" fill="#e5e7eb">Telegram</text><text x="350" y="504" fill="#bae6fd">org.telegram.messenger</text><text x="650" y="504" fill="#fecaca">16</text><text x="740" y="504" fill="#fde68a">18</text><text x="870" y="504" fill="#38bdf8">View / Delete</text>
+    <text x="108" y="534" fill="#e5e7eb">NewPipe</text><text x="350" y="534" fill="#bae6fd">org.schabi.newpipe</text><text x="650" y="534" fill="#fecaca">1</text><text x="740" y="534" fill="#fde68a">4</text><text x="870" y="534" fill="#38bdf8">View / Delete</text>
+  </g>
+</svg>

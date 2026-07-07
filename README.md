@@ -2,11 +2,46 @@
 
 **Languages:** English | [简体中文](README.zh-CN.md)
 
+<p align="center">
+  <img src="docs/assets/apksleuth-hero.svg" alt="ApkSleuth project hero" width="100%">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge" alt="MIT License">
+  <img src="https://img.shields.io/badge/local--first-no%20uploads-38bdf8?style=for-the-badge" alt="Local-first">
+  <img src="https://img.shields.io/badge/interface-CLI%20%2B%20Web%20UI-8b5cf6?style=for-the-badge" alt="CLI and Web UI">
+</p>
+
+<p align="center">
+  <strong>Analyze APKs locally, triage risk fast, and export reports for humans or automation.</strong>
+</p>
+
 ApkSleuth is a local-first Android APK static analysis tool for security review, reverse-engineering learning, Android development checks, and app risk triage.
 
 It extracts APK metadata, Manifest configuration, permissions, exported components, URLs, IPs, emails, possible secrets, certificates, native libraries, SDK fingerprints, packer hints, and security findings. It can generate JSON, Markdown, HTML, short summary reports, structured summary JSON, batch indexes, and APK diff reports.
 
 APK files are analyzed locally by default. ApkSleuth does not upload APKs and does not require an account.
+
+## Visual Overview
+
+<p align="center">
+  <img src="docs/assets/workflow.svg" alt="ApkSleuth workflow" width="100%">
+</p>
+
+| CLI workflow | Local Web UI |
+| --- | --- |
+| <img src="docs/assets/cli-preview.svg" alt="ApkSleuth CLI preview"> | <img src="docs/assets/web-ui-preview.svg" alt="ApkSleuth Web UI preview"> |
+
+## At a Glance
+
+| Area | What ApkSleuth does |
+| --- | --- |
+| Static analysis | Parses Manifest, resources, permissions, strings, certificates, native libraries, SDKs, and packer hints. |
+| Risk triage | Groups findings by severity and prioritizes high-risk items before noisy low-risk signals. |
+| Reporting | Exports summary Markdown, structured JSON, full JSON, and interactive HTML reports. |
+| Web UI | Uploads one or many APKs, tracks background jobs, searches history, sorts by risk, and cleans up managed uploads. |
+| Automation | Provides `summary-json`, batch `index.json`, and APK diff JSON for downstream tooling. |
 
 ## Highlights
 
