@@ -239,6 +239,15 @@ FINDING_TITLES_ZH = {
     "exported-deep-link-activity": "导出 Deep Link Activity",
     "exported-protected-component": "受权限保护的导出组件",
     "exported-media-component": "导出媒体控制组件",
+    "exported-quick-settings-tile": "导出快捷设置 Tile 服务",
+    "exported-autofill-service": "导出 Autofill 服务",
+    "exported-documents-provider": "导出 DocumentsProvider",
+    "exported-file-provider": "导出 FileProvider 未受权限保护",
+    "exported-share-target-activity": "导出分享入口 Activity",
+    "exported-file-handler-activity": "导出文件处理 Activity",
+    "exported-custom-tabs-service": "导出 Custom Tabs 服务",
+    "exported-car-service": "导出车载集成服务",
+    "exported-widget-receiver": "导出 App Widget Receiver",
     "implicit-exported-component": "隐式导出组件",
     "high-risk-permission": "高危权限",
     "hardcoded-secret": "疑似硬编码密钥",
@@ -258,6 +267,15 @@ FINDING_RECOMMENDATIONS_ZH = {
     "exported-deep-link-activity": "校验所有 Deep Link 参数，敏感流程必须鉴权，并尽量限制 exported 暴露面。",
     "exported-protected-component": "确认权限 protectionLevel，只有确需外部访问时才保持 exported。",
     "exported-media-component": "确认该组件只处理标准媒体控制 Intent，并校验外部输入。",
+    "exported-quick-settings-tile": "确认 Tile 服务只响应系统绑定和明确用户操作，不在点击前执行敏感逻辑。",
+    "exported-autofill-service": "确认服务受 Autofill 框架权限保护，并校验所有填充请求。",
+    "exported-documents-provider": "确认文档根目录、URI grant 和访问控制只暴露用户授权文件。",
+    "exported-file-provider": "除非确需公开访问，否则设置 android:exported=\"false\"，并限制 provider paths 和 URI grant。",
+    "exported-share-target-activity": "校验分享 MIME 类型、URI 权限、文件大小和内容解析逻辑。",
+    "exported-file-handler-activity": "校验 URI scheme、MIME 类型、文件大小和解析器行为。",
+    "exported-custom-tabs-service": "确认 Custom Tabs 暴露的方法不会泄露浏览状态或触发特权操作。",
+    "exported-car-service": "校验 Android Auto / 车载入口，避免无用户确认执行敏感行为。",
+    "exported-widget-receiver": "校验 Widget 广播 action 和 extras，忽略非预期外部广播。",
     "implicit-exported-component": "显式设置 android:exported；除非确需外部访问，否则设置为 false。",
     "high-risk-permission": "确认该权限是否为核心功能必需；不必要时移除或改用更低敏感度能力。",
     "hardcoded-secret": "不要在 APK 中硬编码密钥；确认泄露后应轮换凭据并迁移到服务端。",
@@ -276,6 +294,15 @@ FINDING_REVIEW_HINTS_ZH = {
     "exported-deep-link-activity": "复核 scheme、host、path 过滤规则、鉴权要求和所有 Deep Link 参数校验。",
     "exported-media-component": "复核 Intent 处理代码，确保只接受预期的标准媒体控制动作。",
     "exported-protected-component": "确认权限 protectionLevel；normal 或 dangerous 级权限可能不足以保护敏感导出组件。",
+    "exported-quick-settings-tile": "复核 Tile 点击处理，确保没有用户意图时不会执行敏感操作。",
+    "exported-autofill-service": "复核 Autofill 数据集处理，确认只有可信框架调用能访问敏感数据。",
+    "exported-documents-provider": "复核 query/openDocument/deleteDocument 处理逻辑，确认访问范围受用户授权限制。",
+    "exported-file-provider": "复核 provider paths、URI grant、MIME 处理以及所有 openFile/openAssetFile 路径。",
+    "exported-share-target-activity": "复核 ACTION_SEND/ACTION_SEND_MULTIPLE 处理，拒绝非预期 MIME 类型或超大输入。",
+    "exported-file-handler-activity": "复核 ACTION_VIEW 对 file/content URI 的处理，确认解析外部内容不会触发不安全文件访问。",
+    "exported-custom-tabs-service": "复核 Custom Tabs 绑定行为，确认调用方不能访问敏感浏览器内部状态。",
+    "exported-car-service": "复核 Android Auto 会话处理、导航 Intent 和对调用方的假设。",
+    "exported-widget-receiver": "复核 Widget action 处理，忽略非预期广播或不可信 extras。",
     "implicit-exported-component": "确认目标平台行为，并显式设置 android:exported 以避免暴露面不一致。",
     "high-risk-permission": "确认权限是否为核心功能必需，并通过运行时授权流程或功能开关限制使用。",
     "hardcoded-secret": "确认该值是否为有效凭据或 Token；如确认泄露，应立即轮换。",
@@ -1068,6 +1095,15 @@ def _finding_evidence(finding: Finding, language: str) -> str:
         "exported-deep-link-activity",
         "exported-protected-component",
         "exported-media-component",
+        "exported-quick-settings-tile",
+        "exported-autofill-service",
+        "exported-documents-provider",
+        "exported-file-provider",
+        "exported-share-target-activity",
+        "exported-file-handler-activity",
+        "exported-custom-tabs-service",
+        "exported-car-service",
+        "exported-widget-receiver",
         "implicit-exported-component",
     }:
         evidence = evidence.replace(" is explicitly exported.", " 显式导出。")
@@ -1075,6 +1111,14 @@ def _finding_evidence(finding: Finding, language: str) -> str:
         evidence = evidence.replace(" is exported with permission ", " 导出，并受权限保护：")
         evidence = evidence.replace(" exposes deep link intent filters without permission.", " 暴露 Deep Link intent-filter 且未配置权限保护。")
         evidence = evidence.replace(" exposes standard media control actions.", " 暴露标准媒体控制动作。")
+        evidence = evidence.replace(" is exported for Quick Settings tile binding.", " 作为快捷设置 Tile 服务导出。")
+        evidence = evidence.replace(" is exported for Autofill binding.", " 作为 Autofill 服务导出。")
+        evidence = evidence.replace(" is exported as a DocumentsProvider.", " 作为 DocumentsProvider 导出。")
+        evidence = evidence.replace(" accepts external share intents.", " 接收外部分享 Intent。")
+        evidence = evidence.replace(" accepts file/content input.", " 接收 file/content 外部输入。")
+        evidence = evidence.replace(" is exported for Custom Tabs.", " 作为 Custom Tabs 服务导出。")
+        evidence = evidence.replace(" is exported for car integration.", " 作为车载集成服务导出。")
+        evidence = evidence.replace(" is exported for app widget updates.", " 作为 App Widget 更新 Receiver 导出。")
         evidence = evidence.replace(" has intent filters and no explicit exported value.", " 包含 intent-filter 且未显式设置 exported。")
         evidence = evidence.replace(
             " is has intent-filter and no explicit exported value.",

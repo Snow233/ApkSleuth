@@ -7,6 +7,8 @@ LAUNCHER_ACTION = "android.intent.action.MAIN"
 LAUNCHER_CATEGORY = "android.intent.category.LAUNCHER"
 BROWSABLE_CATEGORY = "android.intent.category.BROWSABLE"
 MEDIA_ACTIONS = {"android.intent.action.MEDIA_BUTTON", "android.media.browse.MediaBrowserService"}
+SHARE_ACTIONS = {"android.intent.action.SEND", "android.intent.action.SEND_MULTIPLE"}
+FILE_HANDLER_SCHEMES = {"file", "content"}
 
 
 def run_risk_engine(report: AnalysisReport) -> list[Finding]:
@@ -161,6 +163,45 @@ def _exported_component_finding(component: Component) -> Finding | None:
             review_hint="Review intent handling code and ensure only expected media actions are accepted.",
         )
 
+    if _is_quick_settings_tile(component):
+        return Finding(
+            id="exported-quick-settings-tile",
+            title="Exported Quick Settings Tile",
+            severity="low",
+            category="manifest",
+            description="The service is exported for Android Quick Settings tile integration.",
+            evidence=f"service {component.name} is exported for Quick Settings tile binding.",
+            recommendation="Keep the tile service exported only when the OS binding requires it and avoid sensitive work before user confirmation.",
+            confidence="medium",
+            review_hint="Review tile click handling and ensure it does not execute sensitive actions without user intent.",
+        )
+
+    if _is_autofill_service(component):
+        return Finding(
+            id="exported-autofill-service",
+            title="Exported Autofill Service",
+            severity="low",
+            category="manifest",
+            description="The service is exported for Android Autofill framework integration.",
+            evidence=f"service {component.name} is exported for Autofill binding.",
+            recommendation="Confirm the service is protected by the Android Autofill binding permission and validates all fill requests.",
+            confidence="medium",
+            review_hint="Review Autofill dataset handling and ensure only trusted framework calls can reach sensitive data.",
+        )
+
+    if _is_documents_provider(component):
+        return Finding(
+            id="exported-documents-provider",
+            title="Exported Documents Provider",
+            severity="low",
+            category="manifest",
+            description="The provider is exported for Android Storage Access Framework integration.",
+            evidence=f"provider {component.name} is exported as a DocumentsProvider.",
+            recommendation="Confirm document roots, URI grants, and access checks expose only intended files.",
+            confidence="medium",
+            review_hint="Review query/openDocument/deleteDocument handlers and verify access is scoped to user-approved documents.",
+        )
+
     if component.permission:
         return Finding(
             id="exported-protected-component",
@@ -175,6 +216,18 @@ def _exported_component_finding(component: Component) -> Finding | None:
         )
 
     if component.type == "provider":
+        if _is_file_provider(component):
+            return Finding(
+                id="exported-file-provider",
+                title="Exported File Provider Without Permission",
+                severity="high",
+                category="manifest",
+                description="An exported FileProvider-like provider without permission protection may expose files or URI grants.",
+                evidence=f"provider {component.name} is exported without permission.",
+                recommendation="Set android:exported=\"false\" unless the provider is intentionally public and fully permission-gated.",
+                confidence="high",
+                review_hint="Review provider paths, URI grants, MIME handling, and all openFile/openAssetFile paths.",
+            )
         return Finding(
             id="exported-provider",
             title="Exported Provider Without Permission",
@@ -200,7 +253,57 @@ def _exported_component_finding(component: Component) -> Finding | None:
             review_hint="Review scheme/host/path filters, authentication requirements, and parameter validation for all deep link entry points.",
         )
 
+    if _is_share_target_activity(component):
+        return Finding(
+            id="exported-share-target-activity",
+            title="Exported Share Target Activity",
+            severity="medium",
+            category="manifest",
+            description="The activity accepts external share intents.",
+            evidence=f"activity {component.name} accepts external share intents.",
+            recommendation="Validate shared MIME types, URI permissions, file sizes, and content before processing.",
+            confidence="high",
+            review_hint="Review ACTION_SEND/ACTION_SEND_MULTIPLE handling and reject unexpected MIME types or oversized inputs.",
+        )
+
+    if _is_file_handler_activity(component):
+        return Finding(
+            id="exported-file-handler-activity",
+            title="Exported File Handler Activity",
+            severity="medium",
+            category="manifest",
+            description="The activity handles external file or content URIs.",
+            evidence=f"activity {component.name} accepts file/content input.",
+            recommendation="Validate URI schemes, MIME types, file size, and parser behavior before opening external content.",
+            confidence="high",
+            review_hint="Review ACTION_VIEW handling for file/content URIs and ensure parsing cannot trigger unsafe file access.",
+        )
+
     if component.type == "service":
+        if _is_custom_tabs_service(component):
+            return Finding(
+                id="exported-custom-tabs-service",
+                title="Exported Custom Tabs Service",
+                severity="medium",
+                category="manifest",
+                description="The service is exported for browser Custom Tabs integration.",
+                evidence=f"service {component.name} is exported for Custom Tabs.",
+                recommendation="Confirm exposed Custom Tabs methods do not leak browsing state or privileged actions.",
+                confidence="high",
+                review_hint="Review Custom Tabs binding behavior and ensure callers cannot access sensitive browser internals.",
+            )
+        if _is_car_service(component):
+            return Finding(
+                id="exported-car-service",
+                title="Exported Car Integration Service",
+                severity="medium",
+                category="manifest",
+                description="The service is exported for Android Auto or car integration.",
+                evidence=f"service {component.name} is exported for car integration.",
+                recommendation="Validate car-app entry points and avoid sensitive actions without explicit user interaction.",
+                confidence="high",
+                review_hint="Review Android Auto session handling, navigation intents, and caller assumptions.",
+            )
         return Finding(
             id="exported-service",
             title="Exported Service Without Permission",
@@ -214,6 +317,18 @@ def _exported_component_finding(component: Component) -> Finding | None:
         )
 
     if component.type == "receiver":
+        if _is_widget_receiver(component):
+            return Finding(
+                id="exported-widget-receiver",
+                title="Exported App Widget Receiver",
+                severity="low",
+                category="manifest",
+                description="The receiver is exported for Android app widget integration.",
+                evidence=f"receiver {component.name} is exported for app widget updates.",
+                recommendation="Ensure widget broadcasts do not trigger sensitive actions without validating action and extras.",
+                confidence="medium",
+                review_hint="Review accepted widget actions and ignore unexpected broadcasts or untrusted extras.",
+            )
         return Finding(
             id="exported-receiver",
             title="Exported Receiver Without Permission",
@@ -267,12 +382,63 @@ def _is_media_component(component: Component) -> bool:
     return any(action in MEDIA_ACTIONS for intent_filter in component.intent_filters for action in intent_filter.actions)
 
 
+def _has_action(component: Component, actions: set[str]) -> bool:
+    return any(action in actions for intent_filter in component.intent_filters for action in intent_filter.actions)
+
+
+def _has_data_scheme(component: Component, schemes: set[str]) -> bool:
+    return any((item.get("scheme") or "").lower() in schemes for intent_filter in component.intent_filters for item in intent_filter.data)
+
+
+def _has_mime_type(component: Component) -> bool:
+    return any(item.get("mimeType") for intent_filter in component.intent_filters for item in intent_filter.data)
+
+
+def _is_quick_settings_tile(component: Component) -> bool:
+    return component.type == "service" and component.permission == "android.permission.BIND_QUICK_SETTINGS_TILE"
+
+
+def _is_autofill_service(component: Component) -> bool:
+    return component.type == "service" and component.permission == "android.permission.BIND_AUTOFILL_SERVICE"
+
+
+def _is_documents_provider(component: Component) -> bool:
+    return component.type == "provider" and component.permission == "android.permission.MANAGE_DOCUMENTS"
+
+
+def _is_file_provider(component: Component) -> bool:
+    return component.type == "provider" and ("fileprovider" in component.name.lower() or "fileprovider" in (component.authorities or "").lower())
+
+
+def _is_share_target_activity(component: Component) -> bool:
+    return component.type in {"activity", "activity-alias"} and _has_action(component, SHARE_ACTIONS)
+
+
+def _is_file_handler_activity(component: Component) -> bool:
+    return component.type in {"activity", "activity-alias"} and _has_action(component, {"android.intent.action.VIEW"}) and (_has_data_scheme(component, FILE_HANDLER_SCHEMES) or _has_mime_type(component))
+
+
+def _is_custom_tabs_service(component: Component) -> bool:
+    return component.type == "service" and ("customtabs" in component.name.lower() or _has_action(component, {"android.support.customtabs.action.CustomTabsService"}))
+
+
+def _is_car_service(component: Component) -> bool:
+    name = component.name.lower()
+    return component.type == "service" and ("androidauto" in name or "carapp" in name or _has_action(component, {"androidx.car.app.CarAppService"}))
+
+
+def _is_widget_receiver(component: Component) -> bool:
+    name = component.name.lower()
+    return component.type == "receiver" and ("widget" in name or _has_action(component, {"android.appwidget.action.APPWIDGET_UPDATE"}))
+
+
 def _is_deep_link_activity(component: Component) -> bool:
     if component.type not in {"activity", "activity-alias"}:
         return False
     for intent_filter in component.intent_filters:
-        if BROWSABLE_CATEGORY in intent_filter.categories:
-            return True
-        if any(item.get("scheme") or item.get("host") for item in intent_filter.data):
+        has_view = "android.intent.action.VIEW" in intent_filter.actions
+        if not has_view and BROWSABLE_CATEGORY not in intent_filter.categories:
+            continue
+        if any((item.get("scheme") or "").lower() not in FILE_HANDLER_SCHEMES and (item.get("scheme") or item.get("host")) for item in intent_filter.data):
             return True
     return False

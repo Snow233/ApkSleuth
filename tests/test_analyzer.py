@@ -89,6 +89,61 @@ MEDIA_MANIFEST = """<?xml version="1.0" encoding="utf-8"?>
 </manifest>
 """
 
+STANDARD_COMPONENT_MANIFEST = """<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.standard"
+    android:versionName="1.0"
+    android:versionCode="1">
+    <application android:label="Standard">
+        <service android:name=".BrowserCustomTabsService" android:exported="true">
+            <intent-filter>
+                <action android:name="android.support.customtabs.action.CustomTabsService" />
+            </intent-filter>
+        </service>
+        <service android:name=".CarAppService" android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+            </intent-filter>
+        </service>
+        <service android:name=".TileService" android:exported="true" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" />
+        <service android:name=".AutofillService" android:exported="true" android:permission="android.permission.BIND_AUTOFILL_SERVICE" />
+        <provider android:name=".DocsProvider" android:exported="true" android:permission="android.permission.MANAGE_DOCUMENTS" android:authorities="com.example.standard.docs" />
+        <provider android:name=".PublicFileProvider" android:exported="true" android:authorities="com.example.standard.fileprovider" />
+        <receiver android:name=".WidgetProvider" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+        </receiver>
+        <activity android:name=".ShareActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".ShareAndDeepLinkActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="standard" android:host="open" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".FileViewActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+"""
+
 OLD_MANIFEST = """<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.demo"
@@ -331,6 +386,29 @@ class AnalyzerTests(unittest.TestCase):
         summary_json = json.loads(render_report(report, "summary-json"))
         self.assertEqual(summary_json["top_findings"][0]["id"], "exported-deep-link-activity")
         self.assertEqual(next(iter(summary_json["verdict"]["risk_drivers"])), "exported-deep-link-activity")
+
+    def test_standard_exported_components_are_classified_precisely(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            apk_path = Path(temp_dir) / "standard.apk"
+            with zipfile.ZipFile(apk_path, "w") as apk:
+                apk.writestr("AndroidManifest.xml", STANDARD_COMPONENT_MANIFEST)
+
+            report = analyze_apk(apk_path)
+
+        finding_ids = {item.id for item in report.findings}
+        self.assertIn("exported-custom-tabs-service", finding_ids)
+        self.assertIn("exported-car-service", finding_ids)
+        self.assertIn("exported-quick-settings-tile", finding_ids)
+        self.assertIn("exported-autofill-service", finding_ids)
+        self.assertIn("exported-documents-provider", finding_ids)
+        self.assertIn("exported-file-provider", finding_ids)
+        self.assertIn("exported-widget-receiver", finding_ids)
+        self.assertIn("exported-share-target-activity", finding_ids)
+        self.assertIn("exported-file-handler-activity", finding_ids)
+        self.assertTrue(any(item.id == "exported-deep-link-activity" and "ShareAndDeepLinkActivity" in item.evidence for item in report.findings))
+        self.assertNotIn("exported-service", finding_ids)
+        self.assertNotIn("exported-receiver", finding_ids)
+        self.assertNotIn("exported-activity", finding_ids)
 
     def test_batch_scan_generates_index_and_reports(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
