@@ -216,6 +216,30 @@ def _exported_component_finding(component: Component) -> Finding | None:
         )
 
     if component.type == "provider":
+        if _provider_has_partial_permissions(component):
+            return Finding(
+                id="exported-provider-partial-permission",
+                title="Exported Provider With Partial Permissions",
+                severity="medium",
+                category="manifest",
+                description="An exported ContentProvider uses read/write specific permissions instead of a single provider permission.",
+                evidence=f"provider {component.name} is exported with read/write permission split.",
+                recommendation="Verify both readPermission and writePermission are strong enough for exposed data and operations.",
+                confidence="high",
+                review_hint="Review readPermission/writePermission protectionLevel and confirm unprotected operations cannot be reached.",
+            )
+        if component.grant_uri_permissions is True:
+            return Finding(
+                id="exported-provider-grant-uri",
+                title="Exported Provider Grants URI Permissions",
+                severity="medium",
+                category="manifest",
+                description="An exported ContentProvider can grant URI permissions to other apps.",
+                evidence=f"provider {component.name} is exported with grantUriPermissions enabled.",
+                recommendation="Review provider path scope and only grant URI permissions for intended files or records.",
+                confidence="high",
+                review_hint="Review path-permission/meta-data/provider paths and ensure grants cannot expose broad app-private data.",
+            )
         if _is_file_provider(component):
             return Finding(
                 id="exported-file-provider",
@@ -408,6 +432,10 @@ def _is_documents_provider(component: Component) -> bool:
 
 def _is_file_provider(component: Component) -> bool:
     return component.type == "provider" and ("fileprovider" in component.name.lower() or "fileprovider" in (component.authorities or "").lower())
+
+
+def _provider_has_partial_permissions(component: Component) -> bool:
+    return component.type == "provider" and not component.permission and bool(component.read_permission or component.write_permission)
 
 
 def _is_share_target_activity(component: Component) -> bool:

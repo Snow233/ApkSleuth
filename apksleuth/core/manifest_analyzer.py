@@ -114,7 +114,10 @@ def _parse_components(application: XmlNode, package_name: str | None, summary: M
             exported=_parse_bool(_attr(child, "exported")),
             enabled=_parse_bool(_attr(child, "enabled")),
             permission=_attr(child, "permission"),
+            read_permission=_attr(child, "readPermission"),
+            write_permission=_attr(child, "writePermission"),
             authorities=_attr(child, "authorities"),
+            grant_uri_permissions=_parse_bool(_attr(child, "grantUriPermissions")),
         )
 
         if component.authorities:

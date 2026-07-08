@@ -109,6 +109,8 @@ STANDARD_COMPONENT_MANIFEST = """<?xml version="1.0" encoding="utf-8"?>
         <service android:name=".AutofillService" android:exported="true" android:permission="android.permission.BIND_AUTOFILL_SERVICE" />
         <provider android:name=".DocsProvider" android:exported="true" android:permission="android.permission.MANAGE_DOCUMENTS" android:authorities="com.example.standard.docs" />
         <provider android:name=".PublicFileProvider" android:exported="true" android:authorities="com.example.standard.fileprovider" />
+        <provider android:name=".SplitPermissionProvider" android:exported="true" android:authorities="com.example.standard.split" android:readPermission="com.example.READ" android:writePermission="com.example.WRITE" />
+        <provider android:name=".GrantProvider" android:exported="true" android:authorities="com.example.standard.grant" android:grantUriPermissions="true" />
         <receiver android:name=".WidgetProvider" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -402,6 +404,8 @@ class AnalyzerTests(unittest.TestCase):
         self.assertIn("exported-autofill-service", finding_ids)
         self.assertIn("exported-documents-provider", finding_ids)
         self.assertIn("exported-file-provider", finding_ids)
+        self.assertIn("exported-provider-partial-permission", finding_ids)
+        self.assertIn("exported-provider-grant-uri", finding_ids)
         self.assertIn("exported-widget-receiver", finding_ids)
         self.assertIn("exported-share-target-activity", finding_ids)
         self.assertIn("exported-file-handler-activity", finding_ids)
@@ -409,6 +413,16 @@ class AnalyzerTests(unittest.TestCase):
         self.assertNotIn("exported-service", finding_ids)
         self.assertNotIn("exported-receiver", finding_ids)
         self.assertNotIn("exported-activity", finding_ids)
+        split_provider = next(item for item in report.manifest.components if item.name == "com.example.standard.SplitPermissionProvider")
+        self.assertEqual(split_provider.read_permission, "com.example.READ")
+        self.assertEqual(split_provider.write_permission, "com.example.WRITE")
+        grant_provider = next(item for item in report.manifest.components if item.name == "com.example.standard.GrantProvider")
+        self.assertTrue(grant_provider.grant_uri_permissions)
+        summary_json = json.loads(render_report(report, "summary-json"))
+        grant_sample = next(item for item in summary_json["exported_component_samples"] if item["name"] == "com.example.standard.GrantProvider")
+        self.assertTrue(grant_sample["grant_uri_permissions"])
+        split_sample = next(item for item in summary_json["exported_component_samples"] if item["name"] == "com.example.standard.SplitPermissionProvider")
+        self.assertEqual(split_sample["read_permission"], "com.example.READ")
 
     def test_batch_scan_generates_index_and_reports(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

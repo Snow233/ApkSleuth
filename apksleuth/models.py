@@ -40,7 +40,10 @@ class Component:
     exported: bool | None = None
     enabled: bool | None = None
     permission: str | None = None
+    read_permission: str | None = None
+    write_permission: str | None = None
     authorities: str | None = None
+    grant_uri_permissions: bool | None = None
     intent_filters: list[IntentFilter] = field(default_factory=list)
 
     @property

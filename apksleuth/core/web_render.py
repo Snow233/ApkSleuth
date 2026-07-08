@@ -391,10 +391,14 @@ def _component_table(items: object) -> str:
             f"<td>{escape(_string(item.get('type')))}</td>"
             f"<td><code>{escape(_string(item.get('name')))}</code></td>"
             f"<td>{escape(_string(item.get('permission') or '无'))}</td>"
+            f"<td>{escape(_string(item.get('read_permission') or '无'))}</td>"
+            f"<td>{escape(_string(item.get('write_permission') or '无'))}</td>"
+            f"<td>{escape(_string(item.get('grant_uri_permissions') if item.get('grant_uri_permissions') is not None else '无'))}</td>"
+            f"<td><code>{escape(_string(item.get('authorities') or ''))}</code></td>"
             f"<td>{escape(_string(item.get('exported')))}</td>"
             "</tr>"
         )
-    return _table(("类型", "名称", "权限", "导出"), rows, "无导出组件样例。")
+    return _table(("类型", "名称", "权限", "读权限", "写权限", "URI Grant", "Authorities", "导出"), rows, "无导出组件样例。")
 
 
 def _url_table(items: object) -> str:

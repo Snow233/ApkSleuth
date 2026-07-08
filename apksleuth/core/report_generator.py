@@ -233,6 +233,8 @@ FINDING_TITLES_ZH = {
     "cleartext-traffic-enabled": "允许明文网络流量",
     "exported-component": "导出组件",
     "exported-provider": "导出 Provider 未受权限保护",
+    "exported-provider-partial-permission": "导出 Provider 使用读写权限分离",
+    "exported-provider-grant-uri": "导出 Provider 允许 URI 授权",
     "exported-service": "导出 Service 未受权限保护",
     "exported-receiver": "导出 Receiver 未受权限保护",
     "exported-activity": "导出 Activity 未受权限保护",
@@ -261,6 +263,8 @@ FINDING_RECOMMENDATIONS_ZH = {
     "cleartext-traffic-enabled": "使用 HTTPS，并通过 network security config 限制明文流量。",
     "exported-component": "明确设置 android:exported，并为可被外部访问的组件增加权限保护。",
     "exported-provider": "设置 android:exported=\"false\"，或使用 signature 级权限保护 Provider。",
+    "exported-provider-partial-permission": "确认 readPermission 和 writePermission 的保护级别足以保护暴露的数据和操作。",
+    "exported-provider-grant-uri": "复核 Provider path 范围，只对预期文件或记录授予 URI 权限。",
     "exported-service": "设置 android:exported=\"false\"，或为 Service 增加 signature 级权限。",
     "exported-receiver": "限制 Receiver 暴露面，校验外部广播，或为外部广播增加权限要求。",
     "exported-activity": "除非该 Activity 是公开入口，否则设置 android:exported=\"false\"，并校验所有 Intent 输入。",
@@ -288,6 +292,8 @@ FINDING_REVIEW_HINTS_ZH = {
     "android-allow-backup-enabled": "复核敏感本地数据是否可能被备份或恢复，并结合目标 Android 版本确认行为。",
     "cleartext-traffic-enabled": "检查 network security config 和运行时接口，确认生产环境是否存在可达明文流量。",
     "exported-provider": "复核 Provider authorities、path permissions、grantUriPermissions 和 query/insert/update/delete 处理逻辑。",
+    "exported-provider-partial-permission": "复核 readPermission/writePermission 的 protectionLevel，确认不存在未受保护的读写操作。",
+    "exported-provider-grant-uri": "复核 path-permission、meta-data 和 provider paths，确认 URI grant 不会暴露过宽的私有数据。",
     "exported-service": "复核 Service 入口、Intent 处理、Binder 暴露面以及调用方鉴权。",
     "exported-receiver": "复核接收的广播 action，确保不可信 extras 不能触发敏感行为。",
     "exported-activity": "确认该 Activity 是否有意作为公开入口，并校验所有 Intent extras 和 data URI。",
@@ -509,6 +515,10 @@ def _summary_payload(report: AnalysisReport, language: str) -> dict[str, object]
                 "type": item.type,
                 "name": item.name,
                 "permission": item.permission,
+                "read_permission": item.read_permission,
+                "write_permission": item.write_permission,
+                "authorities": item.authorities,
+                "grant_uri_permissions": item.grant_uri_permissions,
                 "exported": item.exported,
             }
             for item in exported[:30]
@@ -1089,6 +1099,8 @@ def _finding_evidence(finding: Finding, language: str) -> str:
     if finding.id in {
         "exported-component",
         "exported-provider",
+        "exported-provider-partial-permission",
+        "exported-provider-grant-uri",
         "exported-service",
         "exported-receiver",
         "exported-activity",
@@ -1109,6 +1121,8 @@ def _finding_evidence(finding: Finding, language: str) -> str:
         evidence = evidence.replace(" is explicitly exported.", " 显式导出。")
         evidence = evidence.replace(" is exported without permission.", " 导出且未配置权限保护。")
         evidence = evidence.replace(" is exported with permission ", " 导出，并受权限保护：")
+        evidence = evidence.replace(" is exported with read/write permission split.", " 导出，并使用 read/write 权限分离。")
+        evidence = evidence.replace(" is exported with grantUriPermissions enabled.", " 导出，并启用了 grantUriPermissions。")
         evidence = evidence.replace(" exposes deep link intent filters without permission.", " 暴露 Deep Link intent-filter 且未配置权限保护。")
         evidence = evidence.replace(" exposes standard media control actions.", " 暴露标准媒体控制动作。")
         evidence = evidence.replace(" is exported for Quick Settings tile binding.", " 作为快捷设置 Tile 服务导出。")
