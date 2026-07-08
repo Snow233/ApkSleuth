@@ -374,6 +374,7 @@ def render_summary(report: AnalysisReport, language: str = "zh") -> str:
     urls = [item for item in report.strings if item.type == "url"]
     http_urls = [item for item in urls if item.value.lower().startswith("http://")]
     secrets = [item for item in report.strings if item.type in {"possible_secret", "jwt"}]
+    deep_links = _group_deep_links(manifest.deep_links)
 
     lines = [
         f"# {_label(lang, 'brief_title')}",
@@ -417,7 +418,7 @@ def render_summary(report: AnalysisReport, language: str = "zh") -> str:
     lines.extend(_summary_list(_label(lang, 'top_findings'), _format_top_findings(report.findings, language=lang), lang))
     lines.extend(_summary_list(_label(lang, 'high_risk_permissions'), high_permissions[:12], lang))
     lines.extend(_summary_list(_label(lang, 'exported_component_samples'), [f"{item.type}: {item.name}" for item in exported[:12]], lang))
-    lines.extend(_summary_list(_label(lang, 'deep_links'), [_format_deep_link(item) for item in manifest.deep_links[:12]], lang))
+    lines.extend(_summary_list(_label(lang, 'deep_links'), [_format_deep_link_group(item) for item in deep_links[:12]], lang))
     lines.extend(_summary_list(_label(lang, 'http_url_samples'), [f"{item.value} ({item.source})" for item in http_urls[:12]], lang))
     lines.extend(_summary_list(_label(lang, 'possible_secret_samples'), [f"{item.value} ({item.source})" for item in secrets[:8]], lang))
     lines.extend(_summary_list(_label(lang, 'priority_recommendations'), _top_recommendations(report.findings, limit=8, language=lang), lang))
@@ -442,6 +443,7 @@ def _summary_payload(report: AnalysisReport, language: str) -> dict[str, object]
     http_urls = [item for item in report.strings if item.type == "url" and item.value.lower().startswith("http://")]
     secrets = [item for item in report.strings if item.type in {"possible_secret", "jwt"}]
     finding_counts = Counter(item.id for item in report.findings)
+    deep_links = _group_deep_links(report.manifest.deep_links)
 
     top_findings = []
     for finding_id, count, finding in _ranked_finding_groups(report.findings, limit=12):
@@ -523,7 +525,7 @@ def _summary_payload(report: AnalysisReport, language: str) -> dict[str, object]
             }
             for item in exported[:30]
         ],
-        "deep_link_samples": report.manifest.deep_links[:30],
+        "deep_link_samples": deep_links[:30],
         "http_url_samples": [
             {"value": item.value, "source": item.source, "severity": item.severity} for item in http_urls[:30]
         ],
@@ -612,7 +614,7 @@ def render_html(report: AnalysisReport, language: str = "zh") -> str:
         (_label(lang, 'network_security_config'), report.manifest.network_security_config), (_label(lang, 'application_class'), report.manifest.application_class),
     ]), open_section=False)}
   {_html_section(_label(lang, 'exported_component_samples'), _html_list([f'{item.type}: {item.name}' for item in exported[:40]], _label(lang, 'no_exported')), open_section=False)}
-  {_html_section(_label(lang, 'deep_links'), _html_list([_format_deep_link(item) for item in report.manifest.deep_links[:40]], _label(lang, 'none')), open_section=False)}
+  {_html_section(_label(lang, 'deep_links'), _html_list([_format_deep_link_group(item) for item in _group_deep_links(report.manifest.deep_links)[:40]], _label(lang, 'none')), open_section=False)}
   {_html_section(_label(lang, 'high_risk_permissions'), _html_list(high_permissions, _label(lang, 'no_permissions')), open_section=False)}
   {_html_section(_label(lang, 'http_url_samples'), _html_list([f'{item.value} ({item.source})' for item in http_urls[:40]], _label(lang, 'no_network')), open_section=False)}
   {_html_section(_label(lang, 'sdk_fingerprints'), _html_key_values([
@@ -914,13 +916,45 @@ def _format_top_findings(findings: list[Finding], limit: int = 10, language: str
     return output
 
 
-def _format_deep_link(item: dict[str, str]) -> str:
+def _group_deep_links(items: list[dict[str, str]]) -> list[dict[str, object]]:
+    grouped: dict[str, dict[str, object]] = {}
+    fields = (
+        ("scheme", "schemes"),
+        ("host", "hosts"),
+        ("port", "ports"),
+        ("path", "paths"),
+        ("pathPrefix", "path_prefixes"),
+        ("pathPattern", "path_patterns"),
+        ("mimeType", "mime_types"),
+    )
+    for item in items:
+        component = item.get("component") or "<unknown>"
+        group = grouped.setdefault(component, {"component": component})
+        for source_key, output_key in fields:
+            value = item.get(source_key)
+            if not value:
+                continue
+            values = group.setdefault(output_key, [])
+            if isinstance(values, list) and value not in values:
+                values.append(value)
+    return list(grouped.values())
+
+
+def _format_deep_link_group(item: dict[str, object]) -> str:
     route_parts = []
-    for key in ("scheme", "host", "port", "path", "pathPrefix", "pathPattern", "mimeType"):
-        value = item.get(key)
-        if value:
-            route_parts.append(f"{key}={value}")
-    route = ", ".join(route_parts) if route_parts else "<any>"
+    for key, label in (
+        ("schemes", "scheme"),
+        ("hosts", "host"),
+        ("ports", "port"),
+        ("paths", "path"),
+        ("path_prefixes", "pathPrefix"),
+        ("path_patterns", "pathPattern"),
+        ("mime_types", "mimeType"),
+    ):
+        values = item.get(key)
+        if isinstance(values, list) and values:
+            route_parts.append(f"{label}={', '.join(str(value) for value in values)}")
+    route = "; ".join(route_parts) if route_parts else "<any>"
     return f"{item.get('component', '<unknown>')} ({route})"
 
 

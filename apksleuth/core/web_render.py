@@ -417,18 +417,19 @@ def _url_table(items: object) -> str:
 def _deep_link_table(items: object) -> str:
     rows = []
     for item in _dict_items(items):
-        path_value = _string(item.get("path") or item.get("pathPrefix") or item.get("pathPattern"))
         rows.append(
             "<tr>"
             f"<td><code>{escape(_string(item.get('component')))}</code></td>"
-            f"<td>{escape(_string(item.get('scheme')))}</td>"
-            f"<td>{escape(_string(item.get('host')))}</td>"
-            f"<td>{escape(_string(item.get('port')))}</td>"
-            f"<td>{escape(path_value)}</td>"
-            f"<td>{escape(_string(item.get('mimeType')))}</td>"
+            f"<td>{escape(_join_values(item.get('schemes')))}</td>"
+            f"<td>{escape(_join_values(item.get('hosts')))}</td>"
+            f"<td>{escape(_join_values(item.get('ports')))}</td>"
+            f"<td>{escape(_join_values(item.get('paths')))}</td>"
+            f"<td>{escape(_join_values(item.get('path_prefixes')))}</td>"
+            f"<td>{escape(_join_values(item.get('path_patterns')))}</td>"
+            f"<td>{escape(_join_values(item.get('mime_types')))}</td>"
             "</tr>"
         )
-    return _table(("组件", "Scheme", "Host", "Port", "Path", "MIME"), rows, "未发现 Deep Link 样例。")
+    return _table(("组件", "Scheme", "Host", "Port", "Path", "Path Prefix", "Path Pattern", "MIME"), rows, "未发现 Deep Link 样例。")
 
 
 def _secret_table(items: object) -> str:
@@ -471,6 +472,12 @@ def _dict_items(value: object) -> list[dict[str, Any]]:
 
 def _string(value: object) -> str:
     return "" if value is None else str(value)
+
+
+def _join_values(value: object) -> str:
+    if not isinstance(value, list):
+        return _string(value)
+    return ", ".join(_string(item) for item in value if item)
 
 
 def _analysis_script() -> str:
