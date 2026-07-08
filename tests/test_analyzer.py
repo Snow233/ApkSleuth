@@ -218,6 +218,7 @@ class AnalyzerTests(unittest.TestCase):
                     "apiKey:\"createBannerAd\"\n"
                     "secret:e.sdkSecret\n"
                     "api_key=abc123456789SECRET\n"
+                    "password:'password-new'\n"
                     "url='http://api.example.com/login'\n",
                 )
                 apk.writestr("res/layout/noise.xml", b"http://schemas.android.com/apk/res/android\x00binary")
@@ -246,7 +247,14 @@ class AnalyzerTests(unittest.TestCase):
                 apk.writestr("assets/mermaid/mermaid.min.js", "http://engelschall.com http://commonmark.org/help/")
                 apk.writestr("assets/third-party.js", "http://opensource.org/licenses/MIT")
                 apk.writestr("assets/orgmode/org-bundle.js", "http://underscorejs.org/LICENSE http://daringfireball.net/2010/07/improved_regex_for_matching_urls http://orgmode.org/manual/Export-options.html")
+                apk.writestr("assets/extensions/readerview/readability/readability-0.4.2.js", "http://blog.cdleary.com/2012/01/string-representation-in-spidermonkey/#ropes http://code.google.com/p/arc90labs-readability http://mobile.slate.com http://iovs.arvojournals.org/article.aspx?articleid=2166061")
                 apk.writestr("org/pageseeder/diffx/xml/namespaces.properties", "http://www.allette.com.au")
+                apk.writestr("assets/copyright.html", "http://antigrain.com/ http://www.boost.org/")
+                apk.writestr("META-INF/htmlcompressor.tld", "http://htmlcompressor.googlecode.com/taglib/compressor http://java.sun.com/xml/ns/j2ee")
+                apk.writestr("assets/index.android.bundle", "http://etherx.jabber.org/streams http://jabber.org/protocol/muc http://jitsi.org/jitmeet http://fb.me/use-check-prop-types")
+                apk.writestr("com/ibm/icu/ICUConfig.properties", "http://www.unicode.org/copyright.html")
+                apk.writestr("com/dropbox/core/trusted-certs.raw", "http://certificates.godaddy.com/repository/gdroot.crl0K http://ocsp.godaddy.com")
+                apk.writestr("org/checkerframework/checker/interning/com-sun.astub", "http://www.certicom.com/2000/11/xmlecdsig#ecdsa-sha1 http://www.isi.edu/in-notes/iana/assignments/media-types/ http://www.xmlsecurity.org/NS/#configuration")
 
             with zipfile.ZipFile(apk_path) as apk:
                 findings = extract_strings(apk)
@@ -255,6 +263,7 @@ class AnalyzerTests(unittest.TestCase):
         self.assertIn("api_key=abc123456789SECRET", values)
         self.assertIn("http://api.example.com/login", values)
         self.assertNotIn("password=o.password", values)
+        self.assertNotIn("password:'password-new", values)
         self.assertNotIn('apiKey:"createBannerAd', values)
         self.assertFalse(any(value.startswith("http://schemas.android.com/") for value in values))
         self.assertNotIn("http://www.apache.org/licenses/", values)
@@ -287,7 +296,25 @@ class AnalyzerTests(unittest.TestCase):
         self.assertNotIn("http://underscorejs.org/LICENSE", values)
         self.assertNotIn("http://daringfireball.net/2010/07/improved_regex_for_matching_urls", values)
         self.assertNotIn("http://orgmode.org/manual/Export-options.html", values)
+        self.assertNotIn("http://blog.cdleary.com/2012/01/string-representation-in-spidermonkey/#ropes", values)
+        self.assertNotIn("http://code.google.com/p/arc90labs-readability", values)
+        self.assertNotIn("http://mobile.slate.com", values)
+        self.assertNotIn("http://iovs.arvojournals.org/article.aspx?articleid=2166061", values)
         self.assertNotIn("http://www.allette.com.au", values)
+        self.assertNotIn("http://antigrain.com/", values)
+        self.assertNotIn("http://www.boost.org/", values)
+        self.assertNotIn("http://htmlcompressor.googlecode.com/taglib/compressor", values)
+        self.assertNotIn("http://java.sun.com/xml/ns/j2ee", values)
+        self.assertNotIn("http://etherx.jabber.org/streams", values)
+        self.assertNotIn("http://jabber.org/protocol/muc", values)
+        self.assertNotIn("http://jitsi.org/jitmeet", values)
+        self.assertNotIn("http://fb.me/use-check-prop-types", values)
+        self.assertNotIn("http://www.unicode.org/copyright.html", values)
+        self.assertNotIn("http://certificates.godaddy.com/repository/gdroot.crl0K", values)
+        self.assertNotIn("http://ocsp.godaddy.com", values)
+        self.assertNotIn("http://www.certicom.com/2000/11/xmlecdsig#ecdsa-sha1", values)
+        self.assertNotIn("http://www.isi.edu/in-notes/iana/assignments/media-types/", values)
+        self.assertNotIn("http://www.xmlsecurity.org/NS/#configuration", values)
 
     def test_media_components_are_low_risk_not_exported_service_noise(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

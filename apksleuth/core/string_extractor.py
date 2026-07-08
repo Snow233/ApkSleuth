@@ -41,8 +41,10 @@ SKIP_EXTENSIONS = {
     ".org",
     ".wav",
     ".arsc",
+    ".astub",
     ".dtd",
     ".java",
+    ".tld",
     ".xsd",
     ".ttf",
     ".otf",
@@ -64,10 +66,13 @@ SKIP_BASENAMES = {
     "notice.txt",
     "copying",
     "copying.txt",
+    "copyright",
+    "copyright.html",
     "effective_tld_names.dat",
     "public_suffix_list.dat",
     "readme",
     "readme.txt",
+    "trusted-certs.raw",
 }
 URL_NOISE_PREFIXES = (
     "http://schemas.android.com/",
@@ -80,23 +85,35 @@ URL_NOISE_PREFIXES = (
 URL_NOISE_HOSTS = {
     "apache.org",
     "almworks.com",
+    "blog.cdleary.com",
+    "certificates.godaddy.com",
+    "code.google.com",
     "commonmark.org",
     "daringfireball.net",
     "creativecommons.org",
     "en.wikipedia.org",
     "fsf.org",
+    "etherx.jabber.org",
+    "fb.me",
     "github.com",
     "gnu.org",
+    "htmlcompressor.googlecode.com",
     "inkscape.org",
+    "iovs.arvojournals.org",
+    "jabber.org",
+    "java.sun.com",
     "jmathtex.sourceforge.net",
     "jcip.net",
     "jeffreymartin.ca",
+    "jitsi.org",
     "joda-time.sourceforge.net",
     "localhost",
     "lua-users.org",
     "mina.apache.org",
+    "mobile.slate.com",
     "mozilla.org",
     "ns.adobe.com",
+    "ocsp.godaddy.com",
     "opensource.org",
     "orgmode.org",
     "protobuf.dev",
@@ -106,13 +123,16 @@ URL_NOISE_HOSTS = {
     "todotxt.org",
     "tools.ietf.org",
     "underscorejs.org",
+    "unicode.org",
     "wikipedia.org",
     "www.allette.com.au",
     "www.apache.org",
+    "www.certicom.com",
     "www.creativecommons.org",
     "www.fsf.org",
     "www.gnu.org",
     "www.inf.puc-rio.br",
+    "www.isi.edu",
     "www.inkscape.org",
     "www.jcip.net",
     "www.lua-users.org",
@@ -120,6 +140,8 @@ URL_NOISE_HOSTS = {
     "www.opensource.org",
     "www.stackoverflow.com",
     "www.todotxt.org",
+    "www.unicode.org",
+    "www.xmlsecurity.org",
     "xml.org",
     "xmlpull.org",
     "engelschall.com",
@@ -239,7 +261,7 @@ def _skip(filename: str) -> bool:
         return True
     if any(part in lower for part in ("/fonts/", "\\fonts\\", "/font/", "\\font\\")):
         return True
-    return any(marker in basename for marker in ("license", "licence", "notice", "copying", "readme"))
+    return any(marker in basename for marker in ("license", "licence", "notice", "copying", "copyright", "readme"))
 
 
 def _skip_data(filename: str, data: bytes) -> bool:
@@ -310,6 +332,8 @@ def _looks_like_secret_value(value: str) -> bool:
     has_alpha = any(char.isalpha() for char in stripped)
     has_digit = any(char.isdigit() for char in stripped)
     has_symbol = any(char in "_-./+=" for char in stripped)
+    if not has_digit and re.fullmatch(r"[A-Za-z_.-]+", stripped):
+        return False
     if has_alpha and (has_digit or has_symbol):
         return True
     return len(stripped) >= 32
